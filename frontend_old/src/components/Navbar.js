@@ -1,64 +1,95 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-export default function Navbar({ user, setUser }) {
-  const nav = useNavigate();
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import DoctorDashboard from "./pages/DoctorDashboard";
+import PatientDashboard from "./pages/PatientDashboard";
+import Profile from "./pages/Profile";
+import Appointments from "./pages/Appointments";
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    nav("/login");
-  };
+function App() {
+  const [user, setUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user"));
+    } catch {
+      return null;
+    }
+  });
+
+  const navigate = useNavigate();
+
+  // Redirect users after login based on their role
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === "doctor") navigate("/doctor");
+    if (user.role === "patient") navigate("/patient");
+  }, [user, navigate]);
 
   return (
-    <header className="navbar">
-      <div className="nav-inner container">
-        {/* Brand / Logo */}
-        <Link to="/" className="brand">
-          🏥 HMS
-        </Link>
+    <div className="app-root">
+      {/* ✅ Navbar visible on all authenticated pages */}
+      <Navbar user={user} setUser={setUser} />
 
-        {/* Navigation Links */}
-        <nav className="nav-links">
-          <Link to="/appointments" className="nav-link">
-            Appointments
-          </Link>
+      <main className="container">
+        <Routes>
+          {/* 🌐 Public Routes */}
+          <Route path="/" element={<Login setUser={setUser} />} />
+          <Route path="/login" element={<Login setUser={setUser} />} />
+          <Route path="/signup" element={<Signup setUser={setUser} />} />
 
-          {/* Role-based navigation */}
-          {user?.role === "doctor" && (
-            <Link to="/doctor" className="nav-link">
-              Dashboard
-            </Link>
-          )}
-          {user?.role === "patient" && (
-            <Link to="/patient" className="nav-link">
-              Dashboard
-            </Link>
-          )}
+          {/* 👨‍⚕️ Doctor Routes */}
+          <Route
+            path="/doctor/*"
+            element={
+              <ProtectedRoute user={user} requiredRole="doctor">
+                <DoctorDashboard user={user} />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Profile + Auth Buttons */}
-          {user ? (
-            <>
-              <Link to="/profile" className="nav-link">
-                {user.name || "Profile"}
-              </Link>
-              <button className="btn btn-ghost" onClick={logout}>
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="btn">
-                Login
-              </Link>
-              <Link to="/signup" className="btn btn-outline">
-                Signup
-              </Link>
-            </>
-          )}
-        </nav>
-      </div>
-    </header>
+          {/* 🧑‍⚕️ Patient Routes */}
+          <Route
+            path="/patient/*"
+            element={
+              <ProtectedRoute user={user} requiredRole="patient">
+                <PatientDashboard user={user} />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 📅 Appointments Page 
+              This will dynamically show either patient or doctor appointments */}
+          <Route
+            path="/appointments"
+            element={
+              <ProtectedRoute user={user}>
+                <Appointments user={user} />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 👤 Profile Page */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute user={user}>
+                <Profile user={user} setUser={setUser} />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* 🚫 Fallback 404 Page */}
+          <Route
+            path="*"
+            element={<div style={{ padding: 20 }}>Page not found</div>}
+          />
+        </Routes>
+      </main>
+    </div>
   );
 }
+
+export default App;
