@@ -9,7 +9,7 @@ function PatientDashboard() {
     doctor: "",
     date: "",
     time: "",
-    condition: "",
+    reason: "", // ✅ unified field name
   });
 
   const token = localStorage.getItem("token");
@@ -28,7 +28,6 @@ function PatientDashboard() {
   const fetchAppointments = async () => {
     try {
       const res = await axios.get("https://hospital-backend-f0kz.onrender.com/api/appointments", {
-
         headers: { Authorization: `Bearer ${token}` },
       });
       setAppointments(res.data);
@@ -44,7 +43,7 @@ function PatientDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("✅ Appointment booked successfully!");
-      setFormData({ doctor: "", date: "", time: "", condition: "" });
+      setFormData({ doctor: "", date: "", time: "", reason: "" });
       fetchAppointments();
     } catch (error) {
       console.error("Booking failed:", error);
@@ -98,12 +97,12 @@ function PatientDashboard() {
                 required
               />
 
-              <label>Condition / Symptoms:</label>
+              <label>Condition / Reason:</label>
               <textarea
-                placeholder="Describe your symptoms..."
-                value={formData.condition}
+                placeholder="Describe your symptoms or reason for visit..."
+                value={formData.reason}
                 onChange={(e) =>
-                  setFormData({ ...formData, condition: e.target.value })
+                  setFormData({ ...formData, reason: e.target.value })
                 }
                 required
               ></textarea>
@@ -129,9 +128,15 @@ function PatientDashboard() {
         </>
       ) : (
         <div className="card mt">
-          <div className="flex-between" style={{ display: "flex", justifyContent: "space-between" }}>
+          <div
+            className="flex-between"
+            style={{ display: "flex", justifyContent: "space-between" }}
+          >
             <h3>My Appointments</h3>
-            <button className="btn-outline" onClick={() => setShowAppointments(false)}>
+            <button
+              className="btn-outline"
+              onClick={() => setShowAppointments(false)}
+            >
               ← Back
             </button>
           </div>
@@ -147,7 +152,7 @@ function PatientDashboard() {
                       Dr. {apt.doctor?.name || "Unknown Doctor"}
                     </div>
                     <div className="muted">
-                      Condition: {apt.condition || "N/A"}
+                      Reason: {apt.reason || "N/A"}
                     </div>
                   </div>
                   <div>
