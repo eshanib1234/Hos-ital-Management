@@ -9,7 +9,7 @@ function PatientDashboard() {
     doctor: "",
     date: "",
     time: "",
-    reason: "", // 👈 changed from condition → reason
+    reason: "",
   });
 
   const token = localStorage.getItem("token");
@@ -24,13 +24,21 @@ function PatientDashboard() {
       .catch((err) => console.error("Error fetching doctors:", err));
   }, [token]);
 
-  // Fetch patient's appointments
+  // Fetch appointments for the logged-in patient
   const fetchAppointments = async () => {
     try {
-      const res = await axios.get("https://hospital-backend-f0kz.onrender.com/api/appointments", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAppointments(res.data);
+      const res = await axios.get(
+        "https://hospital-backend-f0kz.onrender.com/api/appointments",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // ✅ Only keep appointments where the patient matches current user
+      const user = JSON.parse(localStorage.getItem("user"));
+      const filtered = res.data.filter(
+        (apt) => apt.patient?._id === user?._id
+      );
+
+      setAppointments(filtered);
     } catch (err) {
       console.error("Error fetching appointments:", err);
     }
@@ -40,9 +48,11 @@ function PatientDashboard() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("https://hospital-backend-f0kz.onrender.com/api/appointments", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(
+        "https://hospital-backend-f0kz.onrender.com/api/appointments",
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       alert("✅ Appointment booked successfully!");
       setFormData({ doctor: "", date: "", time: "", reason: "" });
       fetchAppointments();
@@ -101,9 +111,9 @@ function PatientDashboard() {
               <label>Condition / Symptoms:</label>
               <textarea
                 placeholder="Describe your symptoms..."
-                value={formData.reason} // 👈 changed
+                value={formData.reason}
                 onChange={(e) =>
-                  setFormData({ ...formData, reason: e.target.value }) // 👈 changed
+                  setFormData({ ...formData, reason: e.target.value })
                 }
                 required
               ></textarea>
@@ -129,9 +139,15 @@ function PatientDashboard() {
         </>
       ) : (
         <div className="card mt">
-          <div className="flex-between" style={{ display: "flex", justifyContent: "space-between" }}>
+          <div
+            className="flex-between"
+            style={{ display: "flex", justifyContent: "space-between" }}
+          >
             <h3>My Appointments</h3>
-            <button className="btn-outline" onClick={() => setShowAppointments(false)}>
+            <button
+              className="btn-outline"
+              onClick={() => setShowAppointments(false)}
+            >
               ← Back
             </button>
           </div>
@@ -147,7 +163,7 @@ function PatientDashboard() {
                       Dr. {apt.doctor?.name || "Unknown Doctor"}
                     </div>
                     <div className="muted">
-                      Condition: {apt.reason || "N/A"} {/* 👈 changed */}
+                      Condition: {apt.reason || "N/A"}
                     </div>
                   </div>
                   <div>
