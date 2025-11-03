@@ -128,9 +128,18 @@ export default function DoctorDashboard() {
           <label>Age</label>
           <input
             value={form.age}
-            onChange={(e) => setForm({ ...form, age: e.target.value })}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "" || (val >= 0 && val <= 120)) {
+                // ✅ Restrict age between 0–120
+                setForm({ ...form, age: val });
+              }
+            }}
             type="number"
             placeholder="Enter patient age"
+            min="0"
+            max="120"
+            required
           />
 
           <label>Gender</label>
