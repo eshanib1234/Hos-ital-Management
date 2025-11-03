@@ -1,95 +1,99 @@
-import React, { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import ProtectedRoute from "./components/ProtectedRoute";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import DoctorDashboard from "./pages/DoctorDashboard";
-import PatientDashboard from "./pages/PatientDashboard";
-import Profile from "./pages/Profile";
-import Appointments from "./pages/Appointments";
-
-function App() {
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user"));
-    } catch {
-      return null;
-    }
-  });
-
+function Navbar({ user, setUser }) {
   const navigate = useNavigate();
 
-  // Redirect users after login based on their role
-  useEffect(() => {
-    if (!user) return;
-    if (user.role === "doctor") navigate("/doctor");
-    if (user.role === "patient") navigate("/patient");
-  }, [user, navigate]);
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/login");
+  };
 
   return (
-    <div className="app-root">
-      {/* ✅ Navbar visible on all authenticated pages */}
-      <Navbar user={user} setUser={setUser} />
+    <nav style={styles.navbar}>
+      <h2 style={styles.logo}>🏥 Hospital Management</h2>
 
-      <main className="container">
-        <Routes>
-          {/* 🌐 Public Routes */}
-          <Route path="/" element={<Login setUser={setUser} />} />
-          <Route path="/login" element={<Login setUser={setUser} />} />
-          <Route path="/signup" element={<Signup setUser={setUser} />} />
+      {/* If user is logged in */}
+      {user ? (
+        <div style={styles.links}>
+          {user.role === "doctor" && (
+            <>
+              <Link style={styles.link} to="/doctor">
+                Dashboard
+              </Link>
+              <Link style={styles.link} to="/appointments">
+                Appointments
+              </Link>
+            </>
+          )}
 
-          {/* 👨‍⚕️ Doctor Routes */}
-          <Route
-            path="/doctor/*"
-            element={
-              <ProtectedRoute user={user} requiredRole="doctor">
-                <DoctorDashboard user={user} />
-              </ProtectedRoute>
-            }
-          />
+          {user.role === "patient" && (
+            <>
+              <Link style={styles.link} to="/patient">
+                Dashboard
+              </Link>
+              <Link style={styles.link} to="/appointments">
+                My Appointments
+              </Link>
+            </>
+          )}
 
-          {/* 🧑‍⚕️ Patient Routes */}
-          <Route
-            path="/patient/*"
-            element={
-              <ProtectedRoute user={user} requiredRole="patient">
-                <PatientDashboard user={user} />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 📅 Appointments Page 
-              This will dynamically show either patient or doctor appointments */}
-          <Route
-            path="/appointments"
-            element={
-              <ProtectedRoute user={user}>
-                <Appointments user={user} />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 👤 Profile Page */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute user={user}>
-                <Profile user={user} setUser={setUser} />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* 🚫 Fallback 404 Page */}
-          <Route
-            path="*"
-            element={<div style={{ padding: 20 }}>Page not found</div>}
-          />
-        </Routes>
-      </main>
-    </div>
+          <Link style={styles.link} to="/profile">
+            Profile
+          </Link>
+          <button style={styles.logout} onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      ) : (
+        // If user is not logged in
+        <div style={styles.links}>
+          <Link style={styles.link} to="/login">
+            Login
+          </Link>
+          <Link style={styles.link} to="/signup">
+            Signup
+          </Link>
+        </div>
+      )}
+    </nav>
   );
 }
 
-export default App;
+// ✅ Basic inline styles to keep it neat
+const styles = {
+  navbar: {
+    backgroundColor: "#1976d2",
+    color: "#fff",
+    padding: "10px 20px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+  },
+  logo: {
+    margin: 0,
+    fontSize: "20px",
+  },
+  links: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+  },
+  link: {
+    color: "white",
+    textDecoration: "none",
+    fontWeight: "500",
+  },
+  logout: {
+    background: "#e63946",
+    color: "white",
+    border: "none",
+    borderRadius: "5px",
+    padding: "6px 10px",
+    cursor: "pointer",
+  },
+};
+
+export default Navbar;
