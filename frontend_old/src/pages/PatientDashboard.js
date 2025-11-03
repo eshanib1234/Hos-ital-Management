@@ -9,7 +9,7 @@ function PatientDashboard() {
     doctor: "",
     date: "",
     time: "",
-    reason: "", // ✅ unified field name
+    reason: "", // 👈 changed from condition → reason
   });
 
   const token = localStorage.getItem("token");
@@ -24,7 +24,7 @@ function PatientDashboard() {
       .catch((err) => console.error("Error fetching doctors:", err));
   }, [token]);
 
-  // Fetch only this patient's appointments
+  // Fetch patient's appointments
   const fetchAppointments = async () => {
     try {
       const res = await axios.get("https://hospital-backend-f0kz.onrender.com/api/appointments", {
@@ -36,6 +36,7 @@ function PatientDashboard() {
     }
   };
 
+  // Handle appointment booking
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -97,12 +98,12 @@ function PatientDashboard() {
                 required
               />
 
-              <label>Condition / Reason:</label>
+              <label>Condition / Symptoms:</label>
               <textarea
-                placeholder="Describe your symptoms or reason for visit..."
-                value={formData.reason}
+                placeholder="Describe your symptoms..."
+                value={formData.reason} // 👈 changed
                 onChange={(e) =>
-                  setFormData({ ...formData, reason: e.target.value })
+                  setFormData({ ...formData, reason: e.target.value }) // 👈 changed
                 }
                 required
               ></textarea>
@@ -128,15 +129,9 @@ function PatientDashboard() {
         </>
       ) : (
         <div className="card mt">
-          <div
-            className="flex-between"
-            style={{ display: "flex", justifyContent: "space-between" }}
-          >
+          <div className="flex-between" style={{ display: "flex", justifyContent: "space-between" }}>
             <h3>My Appointments</h3>
-            <button
-              className="btn-outline"
-              onClick={() => setShowAppointments(false)}
-            >
+            <button className="btn-outline" onClick={() => setShowAppointments(false)}>
               ← Back
             </button>
           </div>
@@ -152,7 +147,7 @@ function PatientDashboard() {
                       Dr. {apt.doctor?.name || "Unknown Doctor"}
                     </div>
                     <div className="muted">
-                      Reason: {apt.reason || "N/A"}
+                      Condition: {apt.reason || "N/A"} {/* 👈 changed */}
                     </div>
                   </div>
                   <div>
